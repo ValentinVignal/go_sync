@@ -3,6 +3,8 @@ package main
 import (
 	"net/http"
 
+	"log"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -20,6 +22,7 @@ func main() {
 }
 
 func ping(c *gin.Context) {
+	log.Println("ping")
 	c.JSON(http.StatusOK, gin.H{
 		"message": "pong",
 	})
