@@ -6,6 +6,7 @@ import (
 	"log"
 
 	"github.com/gin-gonic/gin"
+	_ "github.com/lib/pq"
 )
 
 // https://pkg.go.dev/github.com/lib/pq
@@ -28,9 +29,6 @@ func ping(c *gin.Context) {
 	})
 }
 
-func seed(c *gin.Context) {
-
-}
 func drop(c *gin.Context) {
 
 }
