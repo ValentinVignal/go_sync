@@ -25,11 +25,11 @@ func seed(c *gin.Context) {
 		log.Println("Successfully Connected")
 	}
 
-	createDatabase(database)
+	createTables(database)
 
 }
 
-func createDatabase(database *sql.DB) {
+func createTables(database *sql.DB) {
 	createQueries := []string{
 		`CREATE TABLE "project" ("updatedAt" bigint NOT NULL DEFAULT '0', "deletedAt" TIMESTAMP, "id" character varying NOT NULL, "name" character varying NOT NULL, "code" character varying NOT NULL, CONSTRAINT "PK_4d68b1358bb5b766d3e78f32f57" PRIMARY KEY ("id"))`,
 		`CREATE TABLE "task" ("updatedAt" bigint NOT NULL DEFAULT '0', "deletedAt" TIMESTAMP, "id" character varying NOT NULL, "projectID" character varying NOT NULL, "name" character varying NOT NULL, "description" character varying, CONSTRAINT "PK_fb213f79ee45060ba925ecd576e" PRIMARY KEY ("id"))`,

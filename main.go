@@ -29,9 +29,6 @@ func ping(c *gin.Context) {
 	})
 }
 
-func drop(c *gin.Context) {
-
-}
 func sync(c *gin.Context) {
 
 }
