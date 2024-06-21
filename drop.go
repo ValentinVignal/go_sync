@@ -10,7 +10,7 @@ import (
 )
 
 func drop(c *gin.Context) {
-	log.Println("Seed")
+	log.Println("Drop")
 	connString := "postgres://root:password@localhost:5555/go_sync?sslmode=disable"
 	database, err := sql.Open("postgres", connString)
 	if err != nil {

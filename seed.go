@@ -30,6 +30,15 @@ func seed(c *gin.Context) {
 }
 
 func createTables(database *sql.DB) {
+
+	var databaseExists bool
+	database.QueryRow("SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'project')").Scan(&databaseExists)
+	println(databaseExists)
+	if databaseExists {
+		log.Println("Tables already created")
+		return
+	}
+	log.Println("Creating tables...")
 	createQueries := []string{
 		`CREATE TABLE "project" ("updatedAt" bigint NOT NULL DEFAULT '0', "deletedAt" TIMESTAMP, "id" character varying NOT NULL, "name" character varying NOT NULL, "code" character varying NOT NULL, CONSTRAINT "PK_4d68b1358bb5b766d3e78f32f57" PRIMARY KEY ("id"))`,
 		`CREATE TABLE "task" ("updatedAt" bigint NOT NULL DEFAULT '0', "deletedAt" TIMESTAMP, "id" character varying NOT NULL, "projectID" character varying NOT NULL, "name" character varying NOT NULL, "description" character varying, CONSTRAINT "PK_fb213f79ee45060ba925ecd576e" PRIMARY KEY ("id"))`,
@@ -53,4 +62,6 @@ func createTables(database *sql.DB) {
 			log.Fatal(err)
 		}
 	}
+
+	log.Println("Done creating tables")
 }
