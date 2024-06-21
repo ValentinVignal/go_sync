@@ -9,7 +9,7 @@ import (
 	_ "github.com/lib/pq"
 )
 
-func drop(c *gin.Context) {
+func Drop(c *gin.Context) {
 	log.Println("Drop")
 	connString := "postgres://root:password@localhost:5555/go_sync?sslmode=disable"
 	database, err := sql.Open("postgres", connString)
@@ -36,6 +36,7 @@ func dropTables(database *sql.DB) {
 		`ALTER TABLE "form" DROP CONSTRAINT "FK_793836ec378a587c98a8c72a6b8"`,
 		`ALTER TABLE "forms_tasks" DROP CONSTRAINT "FK_0bc7355812c3784dd05b38e13f6"`,
 		`ALTER TABLE "forms_tasks" DROP CONSTRAINT "FK_f3ed34ef693480eda462df17b7b"`,
+		// cspell: disable-next-line
 		`ALTER TABLE "task" DROP CONSTRAINT "FK_464e1e9f04be8ced7e4e878fbcf"`,
 		`DROP INDEX "public"."IDX_99033b0d627d82d697e1b3b08b"`,
 		`DROP INDEX "public"."IDX_bc419c142f5336f4f3c4849788"`,

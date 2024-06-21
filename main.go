@@ -15,8 +15,8 @@ import (
 func main() {
 	router := gin.Default()
 	router.GET("/ping", ping)
-	router.POST("/seed", seed)
-	router.POST("/drop", drop)
+	router.POST("/seed", Seed)
+	router.POST("/drop", Drop)
 	router.GET("/sync", sync)
 	router.Run("localhost:8080")
 

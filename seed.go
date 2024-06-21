@@ -5,11 +5,13 @@ import (
 
 	"log"
 
+	"github.com/aidarkhanov/nanoid"
+	"github.com/bxcodec/faker/v3"
 	"github.com/gin-gonic/gin"
 	_ "github.com/lib/pq"
 )
 
-func seed(c *gin.Context) {
+func Seed(c *gin.Context) {
 	log.Println("Seed")
 	connString := "postgres://root:password@localhost:5555/go_sync?sslmode=disable"
 	database, err := sql.Open("postgres", connString)
@@ -27,10 +29,10 @@ func seed(c *gin.Context) {
 
 	createTables(database)
 
+	seedDatabase(database)
 }
 
 func createTables(database *sql.DB) {
-
 	var databaseExists bool
 	database.QueryRow("SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'project')").Scan(&databaseExists)
 	println(databaseExists)
@@ -64,4 +66,37 @@ func createTables(database *sql.DB) {
 	}
 
 	log.Println("Done creating tables")
+}
+
+type count struct {
+	projects   int
+	tasks      int
+	forms      int
+	formToTask int
+}
+
+var counts = count{
+	projects:   500,
+	tasks:      50_000,
+	forms:      50_000,
+	formToTask: 10_000,
+}
+
+func seedDatabase(database *sql.DB) {
+	log.Println("Seeding database...")
+	projectStatement, err := database.Prepare("INSERT INTO project(id, name, code) VALUES ($1, $2, $3)")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer projectStatement.Close()
+
+	for i := 0; i < counts.projects; i++ {
+		projectId := nanoid.New()
+		projectName := faker.Word()
+		projectCode := faker.Word()
+		if _, err := projectStatement.Exec(projectId, projectName, projectCode); err != nil {
+			log.Fatal(err)
+		}
+	}
+	log.Println("Done seeding")
 }
