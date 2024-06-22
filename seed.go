@@ -2,8 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"encoding/json"
+	"strings"
 
 	"log"
+
+	"math/rand"
 
 	"github.com/aidarkhanov/nanoid"
 	"github.com/bxcodec/faker/v3"
@@ -35,7 +39,6 @@ func Seed(c *gin.Context) {
 func createTables(database *sql.DB) {
 	var databaseExists bool
 	database.QueryRow("SELECT EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename  = 'project')").Scan(&databaseExists)
-	println(databaseExists)
 	if databaseExists {
 		log.Println("Tables already created")
 		return
@@ -98,5 +101,92 @@ func seedDatabase(database *sql.DB) {
 			log.Fatal(err)
 		}
 	}
+
+	projectIds := []string{}
+	rows, err := database.Query("SELECT id FROM project")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
+		} else {
+			projectIds = append(projectIds, id)
+		}
+	}
+
+	for i := 0; i < counts.tasks; i++ {
+		taskId := nanoid.New()
+		taskProjectId := projectIds[rand.Intn(len(projectIds))]
+		taskName := faker.Sentence()
+		taskDescription := faker.Paragraph()
+		updatedAt := faker.UnixTime()
+		if _, err := database.Exec(`INSERT INTO task(id, name, "projectID", description, "updatedAt") VALUES ($1, $2, $3, $4, $5)`, taskId, taskName, taskProjectId, taskDescription, updatedAt); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	fieldIds := strings.Split("0123456789abcdefghijklmnopqrstuvwxyz", "")
+
+	for i := 0; i < counts.forms; i++ {
+		formId := nanoid.New()
+		formProjectId := projectIds[rand.Intn(len(projectIds))]
+		formName := faker.Sentence()
+		formData := make(map[string]string)
+		for _, id := range fieldIds {
+			formData[id] = faker.Sentence()
+		}
+		updatedAt := faker.UnixTime()
+		jsonData, err := json.Marshal(formData)
+		if err != nil {
+			log.Fatal(err)
+		}
+		if _, err := database.Exec(`INSERT INTO form(id, name, "projectID", data, "updatedAt") VALUES ($1, $2, $3, $4, $5)`, formId, formName, formProjectId, jsonData, updatedAt); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	taskIds := []string{}
+	rows, err = database.Query("SELECT id FROM task")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
+		} else {
+			taskIds = append(taskIds, id)
+		}
+	}
+
+	formIds := []string{}
+	rows, err = database.Query("SELECT id FROM form")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var id string
+		if err := rows.Scan(&id); err != nil {
+			log.Fatal(err)
+		} else {
+			formIds = append(formIds, id)
+		}
+	}
+
+	for i := 0; i < counts.formToTask; i++ {
+		formId := formIds[rand.Intn(len(formIds))]
+		taskId := taskIds[rand.Intn(len(taskIds))]
+		updatedAt := faker.UnixTime()
+		if _, err := database.Exec(`INSERT INTO forms_tasks("formID", "taskID", "updatedAt") VALUES ($1, $2, $3)`, formId, taskId, updatedAt); err != nil {
+			log.Fatal(err)
+		}
+	}
+
 	log.Println("Done seeding")
 }
