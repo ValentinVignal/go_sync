@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"net/http"
 
 	"log"
 
@@ -27,6 +28,7 @@ func Drop(c *gin.Context) {
 
 	dropTables(database)
 
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func dropTables(database *sql.DB) {

@@ -17,7 +17,7 @@ func main() {
 	router.GET("/ping", ping)
 	router.POST("/seed", Seed)
 	router.POST("/drop", Drop)
-	router.GET("/sync", sync)
+	router.GET("/sync", Sync)
 	router.Run("localhost:8080")
 
 }
@@ -27,8 +27,4 @@ func ping(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"message": "pong",
 	})
-}
-
-func sync(c *gin.Context) {
-
 }

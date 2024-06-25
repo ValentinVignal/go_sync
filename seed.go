@@ -3,6 +3,7 @@ package main
 import (
 	"database/sql"
 	"encoding/json"
+	"net/http"
 	"strings"
 
 	"log"
@@ -34,6 +35,8 @@ func Seed(c *gin.Context) {
 	createTables(database)
 
 	seedDatabase(database)
+
+	c.JSON(http.StatusOK, gin.H{})
 }
 
 func createTables(database *sql.DB) {
