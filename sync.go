@@ -24,9 +24,18 @@ type SyncedForm struct {
 	TaskIDs   []string               `json:"taskIDs"`
 }
 
+type SyncedTask struct {
+	ID          string   `json:"id"`
+	ProjectID   string   `json:"projectID"`
+	Name        string   `json:"name"`
+	Description string   `json:"description"`
+	FormIDs     []string `json:"formIDs"`
+}
+
 type SyncedData struct {
 	Projects []SyncedProject `json:"projects"`
 	Forms    []SyncedForm    `json:"forms"`
+	Tasks    []SyncedTask    `json:"tasks"`
 }
 
 func Sync(c *gin.Context) {
@@ -64,7 +73,7 @@ func Sync(c *gin.Context) {
 		}
 	}
 
-	formsRows, err := database.Query(`SELECT form.id, form.name, form."projectID" as project_id, form.data, array_remove(array_agg(forms_tasks."taskID"), NULL) as task_ids FROM form
+	formRows, err := database.Query(`SELECT form.id, form.name, form."projectID" as project_id, form.data, array_remove(array_agg(forms_tasks."taskID"), NULL) as task_ids FROM form
         LEFT JOIN forms_tasks ON form.id = forms_tasks."formID"
         WHERE form."deletedAt" IS NULL
         GROUP BY form.id
@@ -72,10 +81,10 @@ func Sync(c *gin.Context) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	defer formsRows.Close()
+	defer formRows.Close()
 
 	forms := []SyncedForm{}
-	for formsRows.Next() {
+	for formRows.Next() {
 		var (
 			id        string
 			name      string
@@ -84,7 +93,7 @@ func Sync(c *gin.Context) {
 			taskIDs   []string
 		)
 
-		if err := formsRows.Scan(&id, &name, &projectID, &data, pq.Array(&taskIDs)); err != nil {
+		if err := formRows.Scan(&id, &name, &projectID, &data, pq.Array(&taskIDs)); err != nil {
 			log.Fatal(err)
 		} else {
 			unMarshaledData := map[string]interface{}{}
@@ -99,9 +108,43 @@ func Sync(c *gin.Context) {
 		}
 	}
 
+	taskRows, err := database.Query(`SELECT task.id, task.name, task.description, task."projectID" as project_id, array_remove(array_agg(forms_tasks."formID"), NULL) as form_ids FROM task
+        LEFT JOIN forms_tasks ON task.id = forms_tasks."taskID"
+        WHERE task."deletedAt" IS NULL
+        GROUP BY task.id
+        ORDER BY task."updatedAt" DESC LIMIT 1000;`)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer taskRows.Close()
+
+	tasks := []SyncedTask{}
+	for taskRows.Next() {
+		var (
+			id          string
+			name        string
+			projectID   string
+			description string
+			formIDs     []string
+		)
+
+		if err := taskRows.Scan(&id, &name, &description, &projectID, pq.Array(&formIDs)); err != nil {
+			log.Fatal(err)
+		} else {
+			tasks = append(tasks, SyncedTask{
+				ID:          id,
+				Name:        name,
+				ProjectID:   projectID,
+				Description: description,
+				FormIDs:     formIDs,
+			})
+		}
+	}
+
 	syncedData := SyncedData{
 		Projects: projects,
 		Forms:    forms,
+		Tasks:    tasks,
 	}
 
 	c.JSON(http.StatusOK, syncedData)
